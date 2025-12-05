@@ -34,6 +34,7 @@ class Jugador(JugadorBase,table=True):
     
 
 class ClubBase(SQLModel):
+
     name: str | None = Field(description="club name")
     
     year: int | None = Field(description="club year")
@@ -41,8 +42,17 @@ class ClubBase(SQLModel):
     img:Optional[str] = Field(default=None, description="club image")
 
 
-class Estadistica():
-    pass
+class EstadisticaBase(SQLModel):
+    id: int | None = Field(default=None, primary_key=True)
+    
+class Estadistica(EstadisticaBase,table=True):
+    
+    gols : int
+    assists:int
+    sanctions:int    
+    
+    idJugador : int
+    idPartido: int
 
 
 class PartidoBase(SQLModel):

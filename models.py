@@ -23,12 +23,30 @@ class Jugador(JugadorBase,table=True):
     price:int | None = Field(description="player dorsal")
     status: States | None = Field(description="player status", default=States.ACTIVO)
     position:Position | None = Field(description="player position")
+    
+    
+    club_id:int = Field(foreign_key="club.id")
+    club: Club = Relationship(back_populates="jugadores")
+
+
 
 
     
 
-class Club(SQLModel):
-    pass
+class ClubBase(SQLModel):
+    name: str | None = Field(description="club name")
+    
+    year: int | None = Field(description="club year")
+
+    img:Optional[str] = Field(default=None, description="club image")
+
+
+
+class Club(ClubBase,table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    
+    jugadores: list["Jugador"] = Relationship(back_populates="club")
+    
 
 class Estadistica():
     pass

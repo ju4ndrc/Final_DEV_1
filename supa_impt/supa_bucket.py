@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import UploadFile
 from supabase import create_client, Client
 from dotenv import load_dotenv
-
+import uuid
 load_dotenv()
 
 SUPABASE_URL=os.getenv("SUPA_URL")
@@ -28,7 +28,7 @@ async def upload_to_bucket(file: UploadFile):
 
     try:
         file_content = await file.read()
-        file_path= f"public/{file.filename}"
+        file_path= f"public/{uuid.uuid4().hex[:8]}_{file.filename}"
         result = client.storage.from_(SUPABASE_BUCKET).upload(
             path=file_path,
             file=file_content,

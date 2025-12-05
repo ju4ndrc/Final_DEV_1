@@ -1,6 +1,7 @@
+
 from typing import Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status,Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlmodel import select
 
 from db import SessionDep
@@ -41,3 +42,33 @@ async def create_club(
         raise HTTPException(status_code=400, detail=str(e))
 
     return RedirectResponse(url=f"/users/{club.id}", status_code=302)
+
+
+@router.get("/", response_class=HTMLResponse)
+async def get_all_users(request: Request, session: SessionDep):
+    result = await session.execute(select(Club))
+    clubs = result.scalars().all()
+    return templates.TemplateResponse("user_list.html",
+                                      {"request": request, "clubs": clubs})
+
+
+@router.get("/{club_id}", response_class=HTMLResponse)
+async def get_one_user(request: Request, club_id: int, session: SessionDep):
+    user_db = await session.get(club, club_id)
+    if not club_db:
+        raise HTTPException(status_code=404, detail="club not found")
+    await session.refresh(club_db, ["pets"])
+    return templates.TemplateResponse("club_detail.html", {"request": request, "club": user_db})
+
+
+
+@router.get("/{club_id}/players", response_class=HTMLResponse)
+async def get_user_pets(request: Request, club_id: int, session: SessionDep):
+    club = await session.get(club, club_id)
+    if not club:
+        raise HTTPException(status_code=404, detail="club not found")
+
+    await session.refresh(club, ["pets"])
+    #pets = club.pets
+
+    return templates.TemplateResponse("club_pets.html", {"request": request, "club":club,"pets": user.pets})

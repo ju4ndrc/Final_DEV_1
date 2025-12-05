@@ -48,5 +48,5 @@ def delete_club(club_id: int, session: Session = Depends(get_session)):
     club = session.get(Club, club_id)
     if not club:
         raise HTTPException(404, "Club no encontrado")
-    session.delete(club)  # por cascade se eliminarán sus jugadores (si configurado)
+    session.delete(club)
     session.commit()

@@ -41,18 +41,32 @@ class ClubBase(SQLModel):
     img:Optional[str] = Field(default=None, description="club image")
 
 
+class Estadistica():
+    pass
+
+
+class PartidoBase(SQLModel):
+    rival = str | None = Field(description="player name")
+    local = str | None = Field(description="player name")
+    date: datetime.datetime | None = Field(description="Match Date")
+
+
+
+class Partido(PartidoBase,table=True):    
+    id: int | None = Field(default=None, primary_key=True)
+
 
 class Club(ClubBase,table=True):
     id: int | None = Field(default=None, primary_key=True)
     
     jugadores: list["Jugador"] = Relationship(back_populates="club")
     
+class JugadorCreate(JugadorBase):
+    img:Optional[str] = None
+    club_id:int = Field(foreign_key="club.id")
 
-class Estadistica():
-    pass
+class ClubCreate(ClubBase):
+    img:Optional[str] = None
 
-
-class Partido():
-    pass
 
 

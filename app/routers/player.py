@@ -18,6 +18,18 @@ async def create_player(new_player:JugadorCreate,session:SessionDep):
     return player
 
 
+@router.get("/", response_model=list[Jugador], summary="Get all Players from the DB")
+async def all_pets(session: SessionDep):
+    result = await session.execute(select(Jugador))
+    return result.scalars().all()
+
+@router.get("/{jugador_id}", response_model=Jugador)
+async def get_one_pet(player_id: int, session: SessionDep):
+    pet_db = await session.get(Jugador, player_id)
+    if not pet_db:
+        raise HTTPException(status_code=404, detail="player not found")
+    return pet_db
+
 
 
 

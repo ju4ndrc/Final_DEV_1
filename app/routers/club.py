@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
-from ..db import get_session
-from ..models import Club, ClubCreate, ClubUpdate
+from db import get_session
+from models import Club, ClubCreate, ClubUpdate
 
 router = APIRouter()
 

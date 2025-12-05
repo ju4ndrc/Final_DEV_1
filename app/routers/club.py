@@ -1,49 +1,43 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status,Request
+from fastapi.responses import RedirectResponse
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
-from ..db import SessionDep
-from ..models import Club, ClubCreate, ClubUpdate
 
-router = APIRouter()
+from db import SessionDep
+from models import Club, ClubCreate
+from supa_impt.supa_bucket import upload_to_bucket
 
-@router.post("", response_model=Club, status_code=status.HTTP_201_CREATED)
-async def create_club(data: ClubCreate, session: SessionDep):
-    club = Club(**data.model_dump())
-    session.add(club)
-    await session.commit()
-    await session.refresh(club)
-    return club
+router = APIRouter(prefix="/club", tags=["Club"])
 
-@router.get("", response_model=list[Club])
-async def list_clubs(session: SessionDep):
-    stmt = select(Club).options(selectinload(Club.jugadores))
-    result = await session.exec(stmt)
-    return result.all()
+@router.post("/", response_model=Club, status_code=status.HTTP_201_CREATED)
+async def create_club(
+    request:Request,
+    session: SessionDep,
+    club_data: ClubCreate, 
+    name: str = Form(...),
+    year: int = Form(...),
+    img: Optional[UploadFile] = File(None)):
 
-@router.get("/{club_id}", response_model=Club)
-async def get_club(club_id: int, session: SessionDep):
-    club = await session.get(Club, club_id)
-    if not club:
-        raise HTTPException(404, "Club no encontrado")
-    return club
+    img_url = None
+    if img:
+        try:
+            img_url = await upload_to_bucket(img)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-@router.patch("/{club_id}", response_model=Club)
-async def update_club(club_id: int, data: ClubUpdate, session: SessionDep):
-    club = await session.get(Club, club_id)
-    if not club:
-        raise HTTPException(404, "Club no encontrado")
-    update_data = data.model_dump(exclude_unset=True)
-    for k, v in update_data.items():
-        setattr(club, k, v)
-    session.add(club)
-    await session.commit()
-    await session.refresh(club)
-    return club
+    try:
+        new_club = ClubCreate(name=name, year=year, img=img_url)
 
-@router.delete("/{club_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_club(club_id: int, session: SessionDep):
-    club = await session.get(Club, club_id)
-    if not club:
-        raise HTTPException(404, "Club no encontrado")
-    await session.delete(club)
-    await session.commit()
+        club = Club.model_validate(new_club)
+        
+        session.add(club)
+        
+        await session.commit()
+        
+        await session.refresh(club)
+
+    except Exception as e:
+        
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return RedirectResponse(url=f"/users/{club.id}", status_code=302)

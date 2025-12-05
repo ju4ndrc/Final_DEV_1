@@ -3,7 +3,7 @@ from db import SessionDep
 from models import Jugador,JugadorCreate,Club
 from sqlmodel import select
 
-router = APIRouter(prefix="/player")
+router = APIRouter(prefix="/player", tags=["Player"])
 
 @router.post("/create",response_model=Jugador,status_code=status.HTTP_201_CREATED)
 async def create_player(new_player:JugadorCreate,session:SessionDep):
